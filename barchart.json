@@ -1,0 +1,81 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 500,
+  "height": 410,
+  "padding": 5,
+  "autosize": "fit",
+  "signals": [
+    {
+      "name": "op",
+      "value": "average",
+      "bind": {"input": "select", "options": ["average", "median", "sum"]}
+    },
+    {
+      "name": "label",
+      "value": {"average": "Average", "median": "Median", "sum": "Total"}
+    }
+  ],
+  "title": {
+    "text": {"signal": "'Loses 2015 [$] State: All'"},
+    "anchor": "start",
+    "frame": "group"
+  },
+  "data": [
+    {
+      "name": "loses",
+      "url": "https://raw.githubusercontent.com/shubhamgupta020/VisualAnalytics/master/losses2015_transformed.csv",
+      "format": {"type": "csv"},
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.Damage_Descp != null && datum.Amount != null"
+        },
+        {
+          "type": "aggregate",
+          "groupby": ["Damage_Descp"],
+          "ops": [{"signal": "op"}],
+          "fields": ["Amount"],
+          "as": ["Amount"]
+        }
+      ]
+    }
+  ],
+  "marks": [
+    {
+      "type": "rect",
+      "from": {"data": "loses"},
+      "encode": {
+        "update": {
+          "x": {"scale": "x", "value": 0},
+          "x2": {"scale": "x", "field": "Amount"},
+          "y": {"scale": "y", "field": "Damage_Descp"},
+          "height": {"scale": "y", "band": 1}
+        }
+      }
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "linear",
+      "domain": {"data": "loses", "field": "Amount"},
+      "range": "width",
+      "nice": true
+    },
+    {
+      "name": "y",
+      "type": "band",
+      "domain": {
+        "data": "loses",
+        "field": "Damage_Descp",
+        "sort": {"op": "max", "field": "Amount", "order": "descending"}
+      },
+      "range": "height",
+      "padding": 0.1
+    }
+  ],
+  "axes": [
+    {"scale": "x", "orient": "bottom", "format": "$,d", "tickCount": 5},
+    {"scale": "y", "orient": "left"}
+  ]
+}
