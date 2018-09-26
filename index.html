@@ -12,9 +12,9 @@
 </head>
 <body>
 
-<!-- Containers for the visualization -->
-<div id="vis"></div>
-<div id="vis1"></div>
+<!-- Container for the visualization -->
+<div id="vis"; style="width: 50%; float: left"></div>
+<div id="vis1" style="width: 50%; float: right"></div>
 
 
 <script type="text/javascript">
@@ -23,13 +23,13 @@
   var spec = "https://raw.githubusercontent.com/shubhamgupta020/VisualAnalytics/master/barchart.json";
   var spec1 = "https://raw.githubusercontent.com/shubhamgupta020/VisualAnalytics/master/choropleth.json"
 
-  // Bar Chart Visulaization
-  vegaEmbed('#vis', spec).then(function(result) {
+  // Choropleth Visulaization
+  vegaEmbed('#vis1', spec).then(function(result) {
     // Access the Vega view instance (https://vega.github.io/vega/docs/api/view/) as result.view
   }).catch(console.error);
   
-  // Choropleth Visualization
-  vegaEmbed('#vis1', spec1).then(function(result) {
+  // Bar Chart Visualization
+  vegaEmbed('#vis', spec1).then(function(result) {
     // Access the Vega view instance (https://vega.github.io/vega/docs/api/view/) as result.view
   }).catch(console.error);
 </script>
