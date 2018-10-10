@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<head>
+  <title>Bar Chart - Loses 2015</title>
+  <meta charset="utf-8">
+
+  <!-- Check: https://github.com/vega/vega-embed -->
+
+  <script src="https://cdn.jsdelivr.net/npm/vega@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@3.0.0-rc3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+
+</head>
+<body>
+
+<!-- Container for the visualization -->
+<div id="vis"; style="width: 50%; float: left"></div>
+<div id="vis1" style="width: 50%; float: right"></div>
+
+
+<script type="text/javascript">
+
+  // this does not work when you run locally due to security reasons - it needs to be read from a server
+  var spec = "https://raw.githubusercontent.com/shubhamgupta020/VisualAnalytics/master/barchart.json";
+  var spec1 = "https://raw.githubusercontent.com/shubhamgupta020/VisualAnalytics/master/choropleth.json"
+
+  // Choropleth Visulaization
+  vegaEmbed('#vis1', spec).then(function(result) {
+    // Access the Vega view instance (https://vega.github.io/vega/docs/api/view/) as result.view
+  }).catch(console.error);
+  
+  // Bar Chart Visualization
+  vegaEmbed('#vis', spec1).then(function(result) {
+    // Access the Vega view instance (https://vega.github.io/vega/docs/api/view/) as result.view
+  }).catch(console.error);
+</script>
+
+</body>
+</html>
