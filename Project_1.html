@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<style>
+
+.states {
+  fill: #d3d3d3;
+  stroke: #ffffff;
+  stroke-linejoin: round;
+}
+.q0-9 { fill: #FFE4E1	; }
+.q1-9 { fill: #FFCCCC; }	
+.q2-9 { fill: #F08080; }
+.q3-9 { fill: #FF6666; }
+.q4-9 { fill: #C65D57	; }
+.q5-9 { fill: #FF4040; }
+.q6-9 { fill: #FF3333;}
+.q7-9 { fill: #FF3D0D;}
+.q8-9 { fill: #9D1309;}
+.q9-9 { fill:#660000;}
+
+#q0-9 { background-color:#FFE4E1	; }
+#q1-9 { background-color: #FFCCCC; }
+#q2-9 { background-color: #F08080; }
+#q3-9 { background-color: #FF6666	; }
+#q4-9 { background-color: #C65D57; }
+#q5-9 { background-color: #FF4040; }
+#q6-9 { background-color: #FF3333	; }
+#q7-9 { background-color: #FF3D0D; }
+#q8-9 { background-color: #9D1309; }
+#q9-9 { background-color: #660000; }
+
+.tooltip {
+  position: absolute;
+  left: 75px;
+  text-align: center;
+  height: 50px;
+  padding: 6px;
+  font-size: 18px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border: 1px solid #989898;
+  pointer-events: none;
+}
+svg .myrect {
+            fill: steelblue;
+            stroke-width: 0px;
+        }
+
+.d3-tip {
+    line-height: 1;
+	left: 75px;
+	text-align: center;
+    height: 40px;
+    padding: 6px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    border: 1px solid #989898;
+    font-size: 18px;
+  }
+svg .myrect:hover {
+            fill: #ff7f7f;
+        }
+.a {
+    background-color: #ff0000;
+	 font-size: 20px;
+	 x: 60;
+	 y:80;
+	 font-weight: bold;
+	 font-family: sans-serif;
+}
+
+.h1 {
+	color: white;
+}
+
+html, body {
+ height: 100%;
+ width: 100%;
+ margin: 0;
+}
+
+.full-height {
+ height: 120%;
+ width: 100%;
+ background: #323232;
+}
+</style>
+</head>
+<body>
+	<div class="full-height">
+
+	<table align="center">
+		<tr>
+			<div id="title_bar" align = "center" class="p-3 mb-2 bg-info text-white">
+				<h2><b>LENDING TREE SITE VISITOR BEHAVIOR</b></h2>
+			</div>
+			<a href= "https://onedrive.live.com/embed?cid=1058F4D23CBD2EE7&resid=1058F4D23CBD2EE7%212427&authkey=AOJOnlMrXFuDnTk&em=2" >
+Presentation</a>
+		</tr>
+		<tr> 
+			<td colspan="2"> <svg id ="displayMapHeading" height="80" width="800"></svg> </td>
+			<td> <svg id ="selectedState" height="80" width="800"></svg> </td>
+		</tr>
+		<tr align="center">
+			<td colspan="2">
+				<div class="usMap" id = "svg_map"></div>
+			</td>
+			<td>
+			<div class = "barChart">
+				<svg id="svg_bar"></svg>
+			</div>
+			</td>
+        </tr>	
+
+        <tr align="center">
+			<td>	
+				<svg id="svg_users_text" height="100" width="450">
+				</svg>
+			</td>
+	    	<td align="right">			
+				<svg id="svg_users_account_text" height="100" width="450"></svg>
+	    	</td>
+		 	<td>	
+	             <svg id="svg_users_credit_text" height="100" width="450"></svg>
+			</td>
+		</tr>
+	</table>
+</div>
+</body>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script>
+		d3v5 = d3
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+<script>
+		d3v3 = d3
+</script>
+
+<!-- to make use of queue feature and topojson for map-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/queue-async/1.0.7/queue.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.19/topojson.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.9.1/d3-tip.js"></script>
+
+<script type="text/javascript">
+
+			var myEntireData;
+            var myData_bar;
+			var globalUs;
+			var map;
+			var div;
+			
+			<!-- dimensions for bar chart-->
+			var margin_bar = {top: 10, right: 5, bottom: 70, left: 70};
+            var svgWidth = 800 - margin_bar.left - margin_bar.right;
+            var svgHeight = 500 - margin_bar.top - margin_bar.bottom;
+			
+			<!-- dimensions for map-->
+			var margin_map = {top: 10, left: 10, bottom: 10, right: 10};
+			var mapWidth = 900 - margin_map.left - margin_map.right;
+			var mapHeight = 650 - margin_map.top - margin_map.bottom;
+				
+			<!--projection for map-->
+			var projection = d3v3.geo.albersUsa().scale(mapWidth).translate([mapWidth /2, mapHeight /2]);
+			<!--to draw the paths from the projection-->
+			var path = d3v3.geo.path().projection(projection);
+	
+			// to load input files
+			queue()
+			.defer(d3.json, "https://raw.githubusercontent.com/ripalbhavsar/VisualAnalytics/master/us-10m.json")
+			.defer(d3.csv, "https://media.githubusercontent.com/media/shubhamgupta020/VisualAnalytics/master/Preprocessed_LendingTree_Data.csv")
+			.defer(d3.csv, "https://raw.githubusercontent.com/ripalbhavsar/LendingTreeProject/master/count.csv")
+			.await(ready);
+	
+			// to move the selection in front
+			d3v3.selection.prototype.moveToFront = function() { return this.each(function() {
+			this.parentNode.appendChild(this);});
+			}; 
+
+			// to move the selection to back
+			d3v3.selection.prototype.moveToBack = function() { 
+			  return this.each(function() { 
+			  var firstChild = this.parentNode.firstChild; 
+					if (firstChild) { this.parentNode.insertBefore(this, firstChild); } 
+			  }); 
+			};    
+			
+			function removeExistingChart(){
+			        console.log("remove")
+					var svg = d3v3.select("#svg_bar")
+				    svg.selectAll("*").remove();
+			}
+			// definition of ready function called in queue
+			function ready(error, us, loadedFiles, countData) {
+			     console.log("in ready ");
+				if (error) throw error;
+				
+					<!-- to append svg to page-->
+				map = d3v3.select(".usMap").append("svg") .style('width', mapWidth + 'px') .style('height', mapHeight + 'px');
+			
+				<!-- to append div to gchart for tooltip on map hover-->
+				div = d3v3.select(".usMap").append("div").attr("class", "tooltip").style("opacity", 0);
+			    div_chart = d3v3.select(".barChart").append("div").attr("class", "tooltip").style("opacity", 0);
+				//globalUs = u;
+				//myEntireData = loadedFiles;
+				
+				// to set color scale by identifying max range
+				//var sum = d3v3.sum(countData, function(d) {return d.State_ID;}); 
+				//console.log("sum")
+				//console.log(sum)
+				var quantize = d3v3.scale.quantize().domain([0, 3000000/10])
+				                         .range(d3.range(10).map(function(i) { return "q" + i + "-9"; }));
+				console.log(quantize)
+				 var groupedAmountData = {};
+				  countData.forEach(function(d) { groupedAmountData[d.State_ID] = d['Unnamed: 0']; });
+				 // console.log(groupedAmountData)
+				  
+				  //to pair state abreviation with state id
+				  var state = {};
+				  loadedFiles.forEach(function(d) { state[d.State_ID] = d.States_only; });
+				  console.log("state")
+				  console.log(state)
+				  
+				    map.append("g")
+					.attr("class", "states")
+					.selectAll("path")
+					.data(topojson.feature(us, us.objects.states).features)
+					.enter().append("path")
+					.attr("d", path)
+					.attr("class", function(d) { return quantize(groupedAmountData[d.id]); })
+					
+					.on("mouseover", function(d) {																	//on mouse hover over states
+						  var selected = d3v3.select(this);
+						  selected.moveToFront();
+						  d3v3.select(this).transition().duration(300).style("opacity", 0.8);
+						  div.transition().duration(300)																	// tooltip hover box
+						  .style("opacity", 1)
+						  div.text(state[d.id]+ ": " + groupedAmountData[d.id])
+						  .style("left", (d3v3.event.pageX) + "px")
+						  .style("top", (d3v3.event.pageY -10) + "px");
+						 removeExistingChart();																				// remove existing bar chart
+						loadSpecificBarChart(loadedFiles, d.id);    //load new bar chart for that particular state
+						d3v3.select("#svg_users_text").selectAll("*").remove();
+					     d3v3.select("#svg_users_account_text").selectAll("*").remove();
+					     d3v3.select("#svg_users_credit_text").selectAll("*").remove();
+					     d3v3.select("#selectedState").selectAll("*").remove();
+                          displaySelectedState(state[d.id]);
+                          displayUsers(loadedFiles, d.id);
+					})
+
+						.on("mouseout", function() {
+						  var selected = d3v3.select(this);
+						  selected.moveToBack();
+						  d3v3.select(this)
+						  .transition().duration(300)
+						  .style("opacity", 1);
+						  div.transition().duration(300)
+						  .style("opacity", 0);
+						// removeExistingChart();																			 // remove existing bar chart
+						// loadAllBarChart(loadedFiles);																			
+
+
+					});
+					console.log("after")
+						loadAllBarChart(loadedFiles)
+				}
+				
+				function loadAllBarChart(loadedFiles){
+				console.log ("in load all data");
+				
+					myData_bar = d3v5.nest()
+											   .key(function(d) { return d['Product Reporting'];})
+											   .rollup(function(d) { return d.length; })
+													.entries(loadedFiles)
+					createBarChart(myData_bar);
+													
+				}
+				
+					// to load bar chart corresponding to a particular state
+			function loadSpecificBarChart(data, state) {
+					console.log ("state is" + state);
+			 var newData = data.filter(function(d) {return d.State_ID == state;})
+					 
+				myData_bar = d3v5.nest()
+											   .key(function(d) { return d['Product Reporting'];})
+											   .rollup(function(d) { return d.length; })
+													.entries(newData)  
+												
+				  console.log(myData_bar);
+			
+				  
+						createBarChart(myData_bar);
+			}
+			
+			
+			function createBarChart(data) {
+					//var svg = d3v5.select("body")
+					var tip = d3.tip().attr('class', 'd3-tip').html(function(d) { return "Count: " + d.value; });
+
+             
+					var svg  = 	 d3v5.select("#svg_bar")
+								  .attr("width", svgWidth + margin_bar.left + margin_bar.right)
+								  .attr("height", svgHeight + margin_bar.top + margin_bar.bottom)
+								  .append("g")
+									//.attr("id", "svg_tree_g_id")
+								  .attr("transform", "translate(" + margin_bar.left + "," + margin_bar.top + ")");
+
+					  svg.call(tip);
+
+                
+				var yScale = d3v5.scaleLinear()
+                                    .domain([0, d3v5.max(data, function(d) { return d.value; })])
+                                    .range([svgHeight, 0]);
+			   
+			  
+				var xScale = d3v5.scaleBand()
+                                     .domain(
+										data.sort(function(d, i) { 
+											return d3v5.descending(d.value, i.value);})
+										.map( function(d) { 
+											return d.key;}))
+                                    .range([0, svgWidth])
+                                    .paddingInner(0.05);
+									
+				// to create axis
+				svg.append("g")
+                  .attr("transform", "translate(0," + (svgHeight) + ")")
+                  .call(d3v5.axisBottom(xScale))
+				  .selectAll("text")
+				  .attr("y", 0)
+                .attr("x", 30)
+            .attr("dy", ".100em")
+            .style("font-weight", "bold")
+				   .attr("transform", "rotate(50)")
+				   .style("text-anchor", "start")
+				   .style('fill', 'white');
+           
+              svg.append("g")
+                  // .attr("transform", "translate(0," + (svgHeight) + ")")
+                  .call(d3v5.axisLeft(yScale))
+				  .selectAll("text")
+				  .style('fill', 'white')
+				  .style("font-size", "12px")
+				  .style("font-weight", "bold");
+
+               //  to generate bars
+                 svg.selectAll("rect")
+					  .data(data)
+					  .enter()
+					  .append("rect")
+                      .attr("x", function(d, i)
+				    {
+                      return xScale(d.key);
+				   })
+                 .attr("y", function(d, i)
+                    {
+                      return yScale(d.value);
+                    })
+                  .attr("height", function(d, i)
+                    {
+                      return svgHeight-yScale(d.value);
+                    })
+                  .attr("width", function(d, i)
+                    {
+                      return xScale.bandwidth();
+                    })
+			       .on("mouseover", tip.show)
+
+                   .on('mouseout', tip.hide)
+    		      .attr("class", "myrect");
+				  
+				 // var elem = svg.selectAll("g myCircleText").data(json.nodes)
+
+            }
+			
+			 function displayUsers(data, state) {
+			  var users = data.filter(function(d) {return d.State_ID == state;})
+		     var  accountUsers = users.filter(function(d) {return d['MyLT Session Started (ev189) (event189)'] == 1;})
+			  var  creditUsers = users.filter(function(d) {return d['Credit Card Apply Clicked (ev69) (event69)'] ==1;})
+				  console.log(creditUsers);
+				  
+				  		var svg  = 	 d3v5.select("#svg_users_text")
+			           
+					/*	svg.append("text")
+						  .attr("dy", "0em")
+						  .text("Total Users:") 
+						  .style("fill","red");  // "line 1" or whatever value you want to add here.
+						
+
+						svg.append("text")
+						  .attr("dy", "1em") // you can vary how far apart it shows up
+						  .text(users.length)  
+						  .style("fill","red");*/
+
+			           svg.append("text")
+					   .attr("class", "a")
+                      .attr("x", 100)
+				       .attr("y", 30)
+					    .text("Total Users:")
+					    .style("fill","white");
+
+			           svg.append("text")
+					   .attr("class", "a")
+                      .attr("x", 230)
+				       .attr("y", 30)
+					    .text(users.length)
+					    .style("fill","red");
+						
+						var svg  = 	 d3v5.select("#svg_users_account_text")
+
+						svg.append("text")
+					   .attr("class", "a")
+                      .attr("x", 120)
+				       .attr("y", 30)
+					    .text("Users with account:")
+					    .style("fill","white");
+
+			           svg.append("text")
+					   .attr("class", "a")
+                      .attr("x", 320)
+				       .attr("y", 30)
+					    .text(accountUsers.length)
+					    .style("fill","red");
+						
+						var svg  = 	 d3v5.select("#svg_users_credit_text")
+
+						svg.append("text")
+					   .attr("class", "a")
+                      .attr("x", 20)
+				       .attr("y", 30)
+					    .text("Users applied for Credit Card")
+					    .style("fill","white");
+
+						svg.append("text")
+					   .attr("class", "a")
+                      .attr("x", 320)
+				       .attr("y", 30)
+					    .text(creditUsers.length)
+					    .style("fill","red");
+			 }
+
+function displaySelectedState(state){
+
+						var svg  = 	 d3v5.select("#selectedState")
+
+						svg.append("text")
+					   .attr("class", "a")
+                       .attr("x", 200)
+				       .attr("y", 40)
+	     			    .text("Product Reporting: ")
+					    .style("fill","white");
+
+						svg.append("text")
+					   .attr("class", "a")
+                       .attr("x", 390)
+				       .attr("y", 40)
+	     			    .text(state)
+					    .style("fill","red");
+
+					    var svg  = 	 d3v5.select("#displayMapHeading")
+
+					    svg.append("text")
+					   .attr("class", "a")
+                       .attr("x", 300)
+				       .attr("y", 40)
+	     			    .text("US States - Site Visitors")
+					    .style("fill","white");					    
+}
+</script>
+</html>
